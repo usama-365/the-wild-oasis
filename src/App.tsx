@@ -1,13 +1,12 @@
-import { styled } from "styled-components";
-
-const Button = styled.button`
-  padding: 8px 12px;
-  background-color: orangered;
-  border: none;
-  border-radius: 4px;
-  color: white;
-`;
+import GlobalStyles from "./styles/GlobalStyles";
+import Button from "./ui/Button";
 
 export default function App() {
-  return <Button>Say hello</Button>;
+  return (
+    <>
+      <GlobalStyles />
+      <p>Hello</p>
+      <Button>Hello</Button>
+    </>
+  );
 }
