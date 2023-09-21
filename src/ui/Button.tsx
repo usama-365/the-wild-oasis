@@ -20,6 +20,8 @@ const sizes = {
   `,
 };
 
+type ButtonSize = keyof typeof sizes;
+
 const variations = {
   primary: css`
     color: var(--color-brand-50);
@@ -48,20 +50,24 @@ const variations = {
   `,
 };
 
-const Button = styled.button`
-  font-size: 1.4rem;
-  padding: 1.2rem 1.6rem;
-  font-weight: 500;
+type ButtonVariation = keyof typeof variations;
+
+type ButtonProps = {
+  size?: ButtonSize;
+  variation?: ButtonVariation;
+};
+
+const Button = styled.button<ButtonProps>`
   border: none;
   border-radius: var(--border-radius-sm);
-  background-color: var(--color-brand-600);
-  color: var(--color-brand-50);
   box-shadow: var(--shadow-sm);
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--color-brand-700);
-  }
+  ${(props) => props.size && sizes[props.size]};
+  ${(props) => props.variation && variations[props.variation]};
 `;
+
+Button.defaultProps = {
+  variation: "primary",
+  size: "medium",
+};
 
 export default Button;
