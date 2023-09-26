@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import { CabinType } from "../../services/supabase.ts";
 import { formatCurrency } from "../../utils/helpers.ts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteCabin } from "../../services/apiCabins.ts";
 
 const TableRow = styled.div`
   display: grid;
@@ -46,14 +48,35 @@ type CabinRowProps = {
 };
 
 export default function CabinRow({ cabin }: CabinRowProps) {
-  const { name, max_capacity, regular_price, discount, image } = cabin;
+  const {
+    id: cabin_id,
+    name,
+    max_capacity,
+    regular_price,
+    discount,
+    image,
+  } = cabin;
+
+  const queryClient = useQueryClient();
+
+  const { isLoading, mutate } = useMutation({
+    mutationFn: deleteCabin,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["cabins"],
+      });
+    },
+    onError: (error: Error) => alert(error.message),
+  });
   return (
     <TableRow role={"row"}>
       <Img src={image || ""} />
       <Cabin>{name}</Cabin>
       <div>Fits up to {max_capacity} guests</div>
       <Price>{formatCurrency(regular_price || 0)}</Price>
-      <button>Delete</button>
+      <button onClick={() => mutate(cabin_id)} disabled={isLoading}>
+        Delete
+      </button>
     </TableRow>
   );
 }
