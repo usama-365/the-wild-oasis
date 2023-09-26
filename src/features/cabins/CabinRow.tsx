@@ -1,4 +1,6 @@
 import styled from "styled-components";
+import { CabinType } from "../../services/supabase.ts";
+import { formatCurrency } from "../../utils/helpers.ts";
 
 const TableRow = styled.div`
   display: grid;
@@ -25,16 +27,33 @@ const Cabin = styled.div`
   font-size: 1.6rem;
   font-weight: 600;
   color: var(--color-grey-600);
-  font-family: "Sono";
+  font-family: "Sono", serif;
 `;
 
 const Price = styled.div`
-  font-family: "Sono";
+  font-family: "Sono", serif;
   font-weight: 600;
 `;
 
 const Discount = styled.div`
-  font-family: "Sono";
+  font-family: "Sono", serif;
   font-weight: 500;
   color: var(--color-green-700);
 `;
+
+type CabinRowProps = {
+  cabin: CabinType;
+};
+
+export default function CabinRow({ cabin }: CabinRowProps) {
+  const { name, max_capacity, regular_price, discount, image } = cabin;
+  return (
+    <TableRow role={"row"}>
+      <Img src={image || ""} />
+      <Cabin>{name}</Cabin>
+      <div>Fits up to {max_capacity} guests</div>
+      <Price>{formatCurrency(regular_price || 0)}</Price>
+      <button>Delete</button>
+    </TableRow>
+  );
+}

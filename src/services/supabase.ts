@@ -12,6 +12,17 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type CabinType = {
+  created_at: string;
+  description: string | null;
+  discount: number | null;
+  id: number;
+  image: string | null;
+  max_capacity: number | null;
+  name: string | null;
+  regular_price: number | null;
+};
+
 interface Database {
   public: {
     Tables: {
@@ -83,16 +94,7 @@ interface Database {
         ];
       };
       cabins: {
-        Row: {
-          created_at: string;
-          description: string | null;
-          discount: number | null;
-          id: number;
-          image: string | null;
-          max_capacity: number | null;
-          name: string | null;
-          regular_price: number | null;
-        };
+        Row: CabinType;
         Insert: {
           created_at?: string;
           description?: string | null;
