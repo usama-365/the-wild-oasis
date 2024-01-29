@@ -1,10 +1,7 @@
-import Textarea from "./Textarea.tsx";
 import styled from "styled-components";
-import { FieldError } from "react-hook-form";
-import { CabinInsertType } from "../services/supabase.ts";
-import { ReactNode } from "react";
+import { ReactElement } from "react";
 
-const StyledFormRow = styled.div`
+export const StyledFormRow = styled.div`
   display: grid;
   align-items: center;
   grid-template-columns: 24rem 1fr 1.2fr;
@@ -41,21 +38,16 @@ const Error = styled.span`
 `;
 
 type FormRowProps = {
-  label: string;
+  label?: string;
   error?: string;
-  children: ReactNode;
+  children: ReactElement<HTMLInputElement>;
 };
 
 export default function FormRow({ label, error, children }: FormRowProps) {
   return (
     <StyledFormRow>
-      <Label htmlFor={children}>{label}</Label>
+      {label && <Label htmlFor={children.props.id}>{label}</Label>}
       {children}
-      <Textarea
-        id="description"
-        defaultValue=""
-        {...register("description", { required: "This field is required" })}
-      />
       {error && <Error>{error}</Error>}
     </StyledFormRow>
   );

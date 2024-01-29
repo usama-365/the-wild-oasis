@@ -38,11 +38,11 @@ const Price = styled.div`
   font-weight: 600;
 `;
 
-const Discount = styled.div`
-  font-family: "Sono", serif;
-  font-weight: 500;
-  color: var(--color-green-700);
-`;
+// const Discount = styled.div`
+//   font-family: "Sono", serif;
+//   font-weight: 500;
+//   color: var(--color-green-700);
+// `;
 
 type CabinRowProps = {
   cabin: CabinType;
@@ -54,7 +54,7 @@ export default function CabinRow({ cabin }: CabinRowProps) {
     name,
     max_capacity,
     regular_price,
-    discount,
+    // discount,
     image,
   } = cabin;
 
