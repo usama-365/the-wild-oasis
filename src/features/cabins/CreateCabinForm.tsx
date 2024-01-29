@@ -5,7 +5,11 @@ import Form from "../../ui/Form";
 import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createCabin } from "../../services/apiCabins.ts";
+import toast from "react-hot-toast";
+import { CabinType } from "../../services/supabase.ts";
 
 const FormRow = styled.div`
   display: grid;
@@ -38,39 +42,59 @@ const Label = styled.label`
   font-weight: 500;
 `;
 
-const Error = styled.span`
+const ErrorMessage = styled.span`
   font-size: 1.4rem;
   color: var(--color-red-700);
 `;
 
-type CabinFormDataType = {
-  name: string;
-  maxCapacity: number;
-  regularPrice: number;
-  discount: number;
-  description: string;
-};
-
 function CreateCabinForm() {
-  const { register, handleSubmit } = useForm<CabinFormDataType>();
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
+  const queryClient = useQueryClient();
+
+  const { mutate, isLoading: isCreating } = useMutation({
+    mutationFn: createCabin,
+    onSuccess: () => {
+      toast.success("New cabin successfully created!");
+      void queryClient.invalidateQueries({ queryKey: ["cabins"] });
+      reset();
+    },
+    onError: (error) => {
+      let message = "Something went wrong in creating the cabin.";
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      toast.error(message);
+    },
   });
+
+  const {
+    register,
+    handleSubmit: handleSubmitReactHookForm,
+    reset,
+  } = useForm<CabinType>();
+
+  const handleSubmit = handleSubmitReactHookForm((data) => {
+    mutate(data);
+  });
+
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={handleSubmit}>
       <FormRow>
         <Label htmlFor="name">Cabin name</Label>
         <Input type="text" id="name" {...register("name")} />
       </FormRow>
 
       <FormRow>
-        <Label htmlFor="maxCapacity">Maximum capacity</Label>
-        <Input type="number" id="maxCapacity" {...register("maxCapacity")} />
+        <Label htmlFor="max-capacity">Maximum capacity</Label>
+        <Input type="number" id="max-capacity" {...register("max_capacity")} />
       </FormRow>
 
       <FormRow>
-        <Label htmlFor="regularPrice">Regular price</Label>
-        <Input type="number" id="regularPrice" {...register("regularPrice")} />
+        <Label htmlFor="regular-price">Regular price</Label>
+        <Input
+          type="number"
+          id="regular-price"
+          {...register("regular_price")}
+        />
       </FormRow>
 
       <FormRow>
@@ -102,7 +126,7 @@ function CreateCabinForm() {
         <Button variation="secondary" type="reset">
           Cancel
         </Button>
-        <Button>Edit cabin</Button>
+        <Button disabled={isCreating}>Add cabin</Button>
       </FormRow>
     </Form>
   );

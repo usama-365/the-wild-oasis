@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = "https://zbfgavqtmabkznfuadsz.supabase.co";
+export const supabaseUrl = "https://zbfgavqtmabkznfuadsz.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZmdhdnF0bWFia3puZnVhZHN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTU3MjMzNzcsImV4cCI6MjAxMTI5OTM3N30.VmNO3glAIIrvuOZTtbNB9PiEHJs3jWJDTNg-44MQ9bU";
 
@@ -11,17 +11,6 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[];
-
-export type CabinType = {
-  created_at: string;
-  description: string | null;
-  discount: number | null;
-  id: number;
-  image: string | null;
-  max_capacity: number | null;
-  name: string | null;
-  regular_price: number | null;
-};
 
 interface Database {
   public: {
@@ -94,7 +83,16 @@ interface Database {
         ];
       };
       cabins: {
-        Row: CabinType;
+        Row: {
+          created_at: string;
+          description: string | null;
+          discount: number | null;
+          id: number;
+          image: string | null;
+          max_capacity: number | null;
+          name: string | null;
+          regular_price: number | null;
+        };
         Insert: {
           created_at?: string;
           description?: string | null;
@@ -191,5 +189,8 @@ interface Database {
 }
 
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+
+export type CabinInsertType = Database["public"]["Tables"]["cabins"]["Insert"];
+export type CabinType = Database["public"]["Tables"]["cabins"]["Row"];
 
 export default supabase;
