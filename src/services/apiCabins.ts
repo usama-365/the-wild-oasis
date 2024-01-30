@@ -4,7 +4,7 @@ const CABIN_BUCKET_NAME = "cabin-images";
 const CABINS_TABLE_NAME = "cabins";
 
 type CabinFormInsertData = Omit<CabinInsertType, "image"> & {
-  image: File;
+  image: File | string | null;
 };
 
 export type CabinFormUpdateData = Omit<CabinInsertType, "image"> & {
@@ -31,9 +31,10 @@ export async function getCabinFromSupabase(id: number) {
 function getOrCreateCabinImageName(
   cabin: CabinFormInsertData | CabinFormUpdateData,
 ) {
-  return `${Math.random()}-${
-    cabin.image instanceof File ? cabin.image.name : cabin.image
-  }`.replace("/", "");
+  if (cabin.image === null) return "";
+  else if (cabin.image instanceof File)
+    return `${Math.random()}-${cabin.image.name}`.replace("/", "");
+  else return cabin.image;
 }
 
 function createImagePath(imageName: string) {
@@ -57,12 +58,18 @@ async function deleteImageFromBucket(imageName: string) {
 }
 
 export async function createCabinOnSupabase(cabin: CabinFormInsertData) {
-  // Create a unique image name and path
-  const imageName = getOrCreateCabinImageName(cabin);
-  const imagePath = createImagePath(imageName);
+  let imageName: string, imagePath: string;
 
-  // Upload image
-  await uploadImageToBucket(imageName, cabin.image);
+  // If a file is provided, create its path and upload to server
+  if (cabin.image instanceof File) {
+    imageName = getOrCreateCabinImageName(cabin);
+    imagePath = createImagePath(imageName);
+    await uploadImageToBucket(imageName, cabin.image);
+  } // As a filepath is provided, extract image name from it
+  else {
+    imagePath = cabin.image || "";
+    imageName = imagePath.split("/").pop() || "";
+  }
 
   // Create the cabin
   const { data, error } = await supabase
@@ -70,9 +77,10 @@ export async function createCabinOnSupabase(cabin: CabinFormInsertData) {
     .insert([{ ...cabin, image: imagePath }])
     .select();
 
-  // Error handling
   if (error) {
-    await deleteImageFromBucket(imageName);
+    // If image was uploaded, delete it
+    if (cabin.image instanceof File) await deleteImageFromBucket(imageName);
+
     throw new Error("Cabin could not be created.");
   }
 
@@ -87,7 +95,6 @@ export async function updateCabinOnSupabase(
 
   // If a new image is created, delete the previous image and upload the new one
   if (cabin.image instanceof File) {
-    console.log("Updated");
     // Delete the previous image
     const previousCabin = await getCabinFromSupabase(id);
     const previousImage = previousCabin.image?.split("/")?.pop();

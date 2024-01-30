@@ -1,10 +1,12 @@
 import styled from "styled-components";
 import { useState } from "react";
+import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 
 import { CabinType } from "../../services/supabase.ts";
 import { formatCurrency } from "../../utils/helpers.ts";
 import CreateOrEditCabinForm from "./CreateOrEditCabinForm.tsx";
 import useDeleteCabin from "./useDeleteCabin.ts";
+import useCreateCabin from "./useCreateCabin.ts";
 
 const TableRow = styled.div`
   display: grid;
@@ -52,6 +54,7 @@ type CabinRowProps = {
 export default function CabinRow({ cabin }: CabinRowProps) {
   const [showEditForm, setShowEditForm] = useState(false);
   const { isDeleting, deleteCabin } = useDeleteCabin();
+  const { isCreating, createCabin } = useCreateCabin();
 
   const {
     id: cabin_id,
@@ -61,6 +64,12 @@ export default function CabinRow({ cabin }: CabinRowProps) {
     discount,
     image,
   } = cabin;
+
+  function handleDuplicate() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: cabinId, ...cabinWithoutId } = cabin;
+    createCabin({ ...cabinWithoutId, name: `Copy of ${name}` });
+  }
 
   return (
     <>
@@ -75,11 +84,14 @@ export default function CabinRow({ cabin }: CabinRowProps) {
           <span>&mdash;</span>
         )}
         <div>
+          <button disabled={isCreating} onClick={() => handleDuplicate()}>
+            <HiSquare2Stack />
+          </button>
           <button onClick={() => setShowEditForm((prevState) => !prevState)}>
-            Edit
+            <HiPencil />
           </button>
           <button onClick={() => deleteCabin(cabin_id)} disabled={isDeleting}>
-            Delete
+            <HiTrash />
           </button>
         </div>
       </TableRow>
