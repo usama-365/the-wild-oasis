@@ -192,5 +192,7 @@ const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 export type CabinInsertType = Database["public"]["Tables"]["cabins"]["Insert"];
 export type CabinType = Database["public"]["Tables"]["cabins"]["Row"];
+export type SettingsInsertType =
+  Database["public"]["Tables"]["settings"]["Insert"];
 
 export default supabase;
