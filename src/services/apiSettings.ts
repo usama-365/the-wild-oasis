@@ -12,7 +12,7 @@ export async function getSettings() {
 }
 
 // We expect a newSetting object that looks like {setting: newValue}
-export async function updateSetting(newSetting: SettingsInsertType) {
+export async function updateSettingOnSupabase(newSetting: SettingsInsertType) {
   const { data, error } = await supabase
     .from("settings")
     .update(newSetting)
@@ -24,5 +24,6 @@ export async function updateSetting(newSetting: SettingsInsertType) {
     console.error(error);
     throw new Error("Settings could not be updated");
   }
+
   return data;
 }
