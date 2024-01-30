@@ -11,13 +11,13 @@ export type CabinFormUpdateData = Omit<CabinInsertType, "image"> & {
   image: string | File | null;
 };
 
-export async function getAllCabins() {
+export async function getAllCabinsFromSupabase() {
   const { data, error } = await supabase.from(CABINS_TABLE_NAME).select("*");
   if (error) throw new Error("Cabins could not be loaded");
   return data;
 }
 
-export async function getCabin(id: number) {
+export async function getCabinFromSupabase(id: number) {
   const { data, error } = await supabase
     .from(CABINS_TABLE_NAME)
     .select()
@@ -56,7 +56,7 @@ async function deleteImageFromBucket(imageName: string) {
   if (error) throw new Error("Unable to delete previous image");
 }
 
-export async function createCabin(cabin: CabinFormInsertData) {
+export async function createCabinOnSupabase(cabin: CabinFormInsertData) {
   // Create a unique image name and path
   const imageName = getOrCreateCabinImageName(cabin);
   const imagePath = createImagePath(imageName);
@@ -79,14 +79,17 @@ export async function createCabin(cabin: CabinFormInsertData) {
   return data;
 }
 
-export async function updateCabin(cabin: CabinFormUpdateData, id: number) {
+export async function updateCabinOnSupabase(
+  cabin: CabinFormUpdateData,
+  id: number,
+) {
   const imageName = getOrCreateCabinImageName(cabin);
 
   // If a new image is created, delete the previous image and upload the new one
   if (cabin.image instanceof File) {
     console.log("Updated");
     // Delete the previous image
-    const previousCabin = await getCabin(id);
+    const previousCabin = await getCabinFromSupabase(id);
     const previousImage = previousCabin.image?.split("/")?.pop();
     if (previousImage) await deleteImageFromBucket(previousImage);
 
@@ -109,7 +112,7 @@ export async function updateCabin(cabin: CabinFormUpdateData, id: number) {
   return data;
 }
 
-export async function deleteCabin(id: number) {
+export async function deleteCabinFromSupabase(id: number) {
   const { error } = await supabase
     .from(CABINS_TABLE_NAME)
     .delete()

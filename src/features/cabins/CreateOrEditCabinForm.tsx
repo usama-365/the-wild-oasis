@@ -1,18 +1,14 @@
+import { useForm } from "react-hook-form";
+
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
 import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
-import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  CabinFormUpdateData,
-  createCabin,
-  updateCabin,
-} from "../../services/apiCabins.ts";
-import toast from "react-hot-toast";
 import FormRow, { StyledFormRow } from "../../ui/FormRow.tsx";
 import { CabinType } from "../../services/supabase.ts";
+import useCreateCabin from "./useCreateCabin.ts";
+import useEditCabin from "./useEditCabin.ts";
 
 export type CabinFormData = Omit<CabinType, "image"> & {
   image: FileList | string | null;
@@ -23,62 +19,37 @@ type CreateOrEditCabinFormProps = {
 };
 
 function CreateOrEditCabinForm({ cabinToEdit }: CreateOrEditCabinFormProps) {
+  const { isCreating, createCabin } = useCreateCabin();
+  const { isUpdating, updateCabin } = useEditCabin();
+
   const isForEditing = !!cabinToEdit;
-
-  const queryClient = useQueryClient();
-
-  const { mutate: create, isLoading: isCreating } = useMutation({
-    mutationFn: createCabin,
-    onSuccess: () => {
-      toast.success("New cabin successfully created!");
-      void queryClient.invalidateQueries({ queryKey: ["cabins"] });
-      reset();
-    },
-    onError: (error) => {
-      let message = "Something went wrong in creating the cabin.";
-      if (error instanceof Error) {
-        message = error.message;
-      }
-      toast.error(message);
-    },
-  });
-
-  const { mutate: update, isLoading: isUpdating } = useMutation({
-    mutationFn: ({ cabin, id }: { cabin: CabinFormUpdateData; id: number }) =>
-      updateCabin(cabin, id),
-    onSuccess: () => {
-      toast.success("New cabin successfully updated!");
-      void queryClient.invalidateQueries({ queryKey: ["cabins"] });
-      reset();
-    },
-    onError: (error) => {
-      let message = "Something went wrong in updating the cabin.";
-      if (error instanceof Error) {
-        message = error.message;
-      }
-      toast.error(message);
-    },
-  });
 
   const {
     register,
     handleSubmit: handleSubmitReactHookForm,
-    reset,
     formState: { errors },
+    reset,
   } = useForm<CabinFormData>(
     isForEditing ? { defaultValues: cabinToEdit } : {},
   );
 
   const handleSubmit = handleSubmitReactHookForm((data) => {
     if (isForEditing)
-      update({
-        cabin: {
-          ...data,
-          image: data.image instanceof FileList ? data.image[0] : data.image,
+      updateCabin(
+        {
+          cabin: {
+            ...data,
+            image: data.image instanceof FileList ? data.image[0] : data.image,
+          },
+          id: cabinToEdit.id,
         },
-        id: cabinToEdit.id,
-      });
-    else create({ ...data, image: (data.image as FileList)[0] });
+        { onSuccess: () => reset() },
+      );
+    else
+      createCabin(
+        { ...data, image: (data.image as FileList)[0] },
+        { onSuccess: () => reset() },
+      );
   });
 
   const isLoading = isUpdating || isCreating;

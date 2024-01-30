@@ -1,11 +1,10 @@
 import styled from "styled-components";
+import { useState } from "react";
+
 import { CabinType } from "../../services/supabase.ts";
 import { formatCurrency } from "../../utils/helpers.ts";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCabin } from "../../services/apiCabins.ts";
-import toast from "react-hot-toast";
-import { useState } from "react";
 import CreateOrEditCabinForm from "./CreateOrEditCabinForm.tsx";
+import useDeleteCabin from "./useDeleteCabin.ts";
 
 const TableRow = styled.div`
   display: grid;
@@ -40,11 +39,11 @@ const Price = styled.div`
   font-weight: 600;
 `;
 
-// const Discount = styled.div`
-//   font-family: "Sono", serif;
-//   font-weight: 500;
-//   color: var(--color-green-700);
-// `;
+const Discount = styled.div`
+  font-family: "Sono", serif;
+  font-weight: 500;
+  color: var(--color-green-700);
+`;
 
 type CabinRowProps = {
   cabin: CabinType;
@@ -52,28 +51,17 @@ type CabinRowProps = {
 
 export default function CabinRow({ cabin }: CabinRowProps) {
   const [showEditForm, setShowEditForm] = useState(false);
+  const { isDeleting, deleteCabin } = useDeleteCabin();
 
   const {
     id: cabin_id,
     name,
     max_capacity,
     regular_price,
-    // discount,
+    discount,
     image,
   } = cabin;
 
-  const queryClient = useQueryClient();
-
-  const { isLoading, mutate } = useMutation({
-    mutationFn: deleteCabin,
-    onSuccess: () => {
-      toast.success("Cabin deleted successfully!");
-      void queryClient.invalidateQueries({
-        queryKey: ["cabins"],
-      });
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
   return (
     <>
       <TableRow role={"row"}>
@@ -81,11 +69,16 @@ export default function CabinRow({ cabin }: CabinRowProps) {
         <Cabin>{name}</Cabin>
         <div>Fits up to {max_capacity} guests</div>
         <Price>{formatCurrency(regular_price || 0)}</Price>
+        {discount ? (
+          <Discount>{formatCurrency(discount)}</Discount>
+        ) : (
+          <span>&mdash;</span>
+        )}
         <div>
           <button onClick={() => setShowEditForm((prevState) => !prevState)}>
             Edit
           </button>
-          <button onClick={() => mutate(cabin_id)} disabled={isLoading}>
+          <button onClick={() => deleteCabin(cabin_id)} disabled={isDeleting}>
             Delete
           </button>
         </div>
