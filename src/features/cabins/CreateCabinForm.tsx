@@ -7,8 +7,10 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createCabin } from "../../services/apiCabins.ts";
 import toast from "react-hot-toast";
-import { CabinInsertType } from "../../services/supabase.ts";
 import FormRow, { StyledFormRow } from "../../ui/FormRow.tsx";
+import { CabinInsertType } from "../../services/supabase.ts";
+
+type CabinFormData = CabinInsertType & { image: FileList };
 
 function CreateCabinForm() {
   const queryClient = useQueryClient();
@@ -34,10 +36,10 @@ function CreateCabinForm() {
     handleSubmit: handleSubmitReactHookForm,
     reset,
     formState: { errors },
-  } = useForm<CabinInsertType>();
+  } = useForm<CabinFormData>();
 
   const handleSubmit = handleSubmitReactHookForm((data) => {
-    mutate(data);
+    mutate({ ...data, image: data.image[0] });
   });
 
   return (
@@ -116,8 +118,15 @@ function CreateCabinForm() {
         />
       </FormRow>
 
-      <FormRow label={"Cabin photo"}>
-        <FileInput id="image" accept="image/*" />
+      <FormRow label={"Cabin photo"} error={errors.image?.message}>
+        <FileInput
+          id="image"
+          type="file"
+          {...register("image", {
+            required: "This field is required.",
+          })}
+          accept="image/*"
+        />
       </FormRow>
 
       <StyledFormRow>
