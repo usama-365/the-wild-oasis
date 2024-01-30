@@ -5,17 +5,29 @@ import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createCabin } from "../../services/apiCabins.ts";
+import {
+  CabinFormUpdateData,
+  createCabin,
+  updateCabin,
+} from "../../services/apiCabins.ts";
 import toast from "react-hot-toast";
 import FormRow, { StyledFormRow } from "../../ui/FormRow.tsx";
-import { CabinInsertType } from "../../services/supabase.ts";
+import { CabinType } from "../../services/supabase.ts";
 
-type CabinFormData = CabinInsertType & { image: FileList };
+export type CabinFormData = Omit<CabinType, "image"> & {
+  image: FileList | string | null;
+};
 
-function CreateCabinForm() {
+type CreateOrEditCabinFormProps = {
+  cabinToEdit?: CabinType;
+};
+
+function CreateOrEditCabinForm({ cabinToEdit }: CreateOrEditCabinFormProps) {
+  const isForEditing = !!cabinToEdit;
+
   const queryClient = useQueryClient();
 
-  const { mutate, isLoading: isCreating } = useMutation({
+  const { mutate: create, isLoading: isCreating } = useMutation({
     mutationFn: createCabin,
     onSuccess: () => {
       toast.success("New cabin successfully created!");
@@ -31,16 +43,45 @@ function CreateCabinForm() {
     },
   });
 
+  const { mutate: update, isLoading: isUpdating } = useMutation({
+    mutationFn: ({ cabin, id }: { cabin: CabinFormUpdateData; id: number }) =>
+      updateCabin(cabin, id),
+    onSuccess: () => {
+      toast.success("New cabin successfully updated!");
+      void queryClient.invalidateQueries({ queryKey: ["cabins"] });
+      reset();
+    },
+    onError: (error) => {
+      let message = "Something went wrong in updating the cabin.";
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      toast.error(message);
+    },
+  });
+
   const {
     register,
     handleSubmit: handleSubmitReactHookForm,
     reset,
     formState: { errors },
-  } = useForm<CabinFormData>();
+  } = useForm<CabinFormData>(
+    isForEditing ? { defaultValues: cabinToEdit } : {},
+  );
 
   const handleSubmit = handleSubmitReactHookForm((data) => {
-    mutate({ ...data, image: data.image[0] });
+    if (isForEditing)
+      update({
+        cabin: {
+          ...data,
+          image: data.image instanceof FileList ? data.image[0] : data.image,
+        },
+        id: cabinToEdit.id,
+      });
+    else create({ ...data, image: (data.image as FileList)[0] });
   });
+
+  const isLoading = isUpdating || isCreating;
 
   return (
     <Form onSubmit={handleSubmit}>
@@ -94,10 +135,11 @@ function CreateCabinForm() {
           {...register("discount", {
             required: "This field is required.",
             validate: (discount, formValues) => {
-              const price = formValues.regular_price;
+              const price = formValues.regular_price
+                ? +formValues.regular_price
+                : 0;
+              discount = discount ? +discount : 0;
 
-              if (!price) return "Please provide a regular price first";
-              if (!discount) return "Please provide a discount";
               return discount < price || "Discount should be less than price";
             },
           })}
@@ -123,7 +165,7 @@ function CreateCabinForm() {
           id="image"
           type="file"
           {...register("image", {
-            required: "This field is required.",
+            required: isForEditing ? false : "This field is required.",
           })}
           accept="image/*"
         />
@@ -134,10 +176,12 @@ function CreateCabinForm() {
         <Button variation="secondary" type="reset">
           Cancel
         </Button>
-        <Button disabled={isCreating}>Add cabin</Button>
+        <Button disabled={isLoading}>
+          {isForEditing ? "Update" : "Add"} cabin
+        </Button>
       </StyledFormRow>
     </Form>
   );
 }
 
-export default CreateCabinForm;
+export default CreateOrEditCabinForm;
