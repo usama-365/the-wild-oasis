@@ -16,9 +16,13 @@ export type CabinFormData = Omit<CabinType, "image"> & {
 
 type CreateOrEditCabinFormProps = {
   cabinToEdit?: CabinType;
+  onCancel?: () => void;
 };
 
-function CreateOrEditCabinForm({ cabinToEdit }: CreateOrEditCabinFormProps) {
+function CreateOrEditCabinForm({
+  cabinToEdit,
+  onCancel,
+}: CreateOrEditCabinFormProps) {
   const { isCreating, createCabin } = useCreateCabin();
   const { isUpdating, updateCabin } = useEditCabin();
 
@@ -34,7 +38,7 @@ function CreateOrEditCabinForm({ cabinToEdit }: CreateOrEditCabinFormProps) {
   );
 
   const handleSubmit = handleSubmitReactHookForm((data) => {
-    if (isForEditing)
+    if (isForEditing) {
       updateCabin(
         {
           cabin: {
@@ -43,19 +47,30 @@ function CreateOrEditCabinForm({ cabinToEdit }: CreateOrEditCabinFormProps) {
           },
           id: cabinToEdit.id,
         },
-        { onSuccess: () => reset() },
+        {
+          onSuccess: () => {
+            reset();
+            onCancel?.();
+          },
+        },
       );
-    else
+    } else {
       createCabin(
         { ...data, image: (data.image as FileList)[0] },
-        { onSuccess: () => reset() },
+        {
+          onSuccess: () => {
+            reset();
+            onCancel?.();
+          },
+        },
       );
+    }
   });
 
   const isLoading = isUpdating || isCreating;
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form type={onCancel ? "modal" : "regular"} onSubmit={handleSubmit}>
       <FormRow error={errors.name?.message} label={"Cabin name"}>
         <Input
           disabled={isCreating}
@@ -144,7 +159,7 @@ function CreateOrEditCabinForm({ cabinToEdit }: CreateOrEditCabinFormProps) {
 
       <StyledFormRow>
         {/* type is an HTML attribute! */}
-        <Button variation="secondary" type="reset">
+        <Button onClick={onCancel} variation="secondary" type="reset">
           Cancel
         </Button>
         <Button disabled={isLoading}>
