@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext } from "react";
+import { ReactElement, ReactNode, createContext, useContext } from "react";
 import styled from "styled-components";
 
 const StyledTable = styled.div`
@@ -89,7 +89,15 @@ Table.Row = function Row({ children }: { children: ReactNode }) {
   );
 };
 
-Table.Body = function Body({ children }: { children: ReactNode }) {};
+type BodyProps<T> = {
+  items?: T[];
+  render: (item: T) => ReactElement;
+};
+
+Table.Body = function Body<T>({ items, render }: BodyProps<T>) {
+  if (items?.length) return <StyledBody>{items.map(render)}</StyledBody>;
+  return <Empty>Data to show at the moment</Empty>;
+};
 
 Table.Footer = styled.footer`
   background-color: var(--color-grey-50);
