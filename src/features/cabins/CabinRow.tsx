@@ -9,6 +9,7 @@ import useCreateCabin from "./useCreateCabin.ts";
 import Modal from "../../ui/Modal.tsx";
 import ConfirmDelete from "../../ui/ConfirmDelete.tsx";
 import Table from "../../ui/Table.tsx";
+import Menus from "../../ui/Menus.tsx";
 
 const Img = styled.img`
   display: block;
@@ -73,29 +74,35 @@ export default function CabinRow({ cabin }: CabinRowProps) {
           <span>&mdash;</span>
         )}
         <div>
-          {/* Duplicate button */}
-          <button disabled={isCreating} onClick={() => handleDuplicate()}>
-            <HiSquare2Stack />
-          </button>
-
-          {/* Buttons that will triger modals */}
           <Modal>
-            {/* Update button inside modal */}
-            <Modal.Open opens="update-cabin">
-              <button>
-                <HiPencil />
-              </button>
-            </Modal.Open>
+            <Menus.Menu>
+              <Menus.Toggle id={cabin.id.toString()} />
+              <Menus.List id={cabin.id.toString()}>
+                {/* Duplicate button */}
+                <Menus.Button
+                  icon={<HiSquare2Stack />}
+                  onClick={() => handleDuplicate()}
+                  disabled={isCreating}
+                >
+                  Duplicate
+                </Menus.Button>
+
+                {/* Update button*/}
+                <Modal.Open opens="update-cabin">
+                  <Menus.Button icon={<HiPencil />}>Edit</Menus.Button>
+                </Modal.Open>
+
+                {/* Delete button inside modal */}
+                <Modal.Open opens="delete-cabin">
+                  <Menus.Button icon={<HiTrash />}>Delete</Menus.Button>
+                </Modal.Open>
+              </Menus.List>
+            </Menus.Menu>
+
             <Modal.Window name="update-cabin">
               <CreateOrEditCabinForm cabinToEdit={cabin} />
             </Modal.Window>
 
-            {/* Delete button inside modal */}
-            <Modal.Open opens="delete-cabin">
-              <button>
-                <HiTrash />
-              </button>
-            </Modal.Open>
             <Modal.Window name="delete-cabin">
               <ConfirmDelete
                 resourceName="cabins"
